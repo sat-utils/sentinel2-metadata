@@ -46,7 +46,7 @@ def elasticsearch_updater(product_dir, metadata):
     body = OrderedDict({
         'scene_id': internal_meta.pop('tile_name'),
         'satellite_name': metadata.get('spacecraft_name', 'Sentintel-2A'),
-        'cloud_coverage': metadata.get('cloudy_coverage_percentage', 100),
+        'cloud_coverage': metadata.get('cloudy_pixel_percentage', 100),
     })
 
     body.update(internal_meta)
