@@ -4,7 +4,7 @@ import click
 import logging
 from copy import copy
 from collections import OrderedDict
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from sentinel_s3 import range_metadata, s3_writer
 
 from elasticsearch import Elasticsearch, RequestError
@@ -105,6 +105,13 @@ def last_updated(today):
     return None
 
 
+def convert_date(value):
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        raise click.UsageError('Incorrect Date format (%s)' % value)
+
+
 @click.command()
 @click.argument('ops', metavar='<operations: choices: s3 | es>', nargs=-1)
 @click.option('--start', default=None, help='Start Date. Format: YYYY-MM-DD')
@@ -112,7 +119,7 @@ def last_updated(today):
 @click.option('--concurrency', default=20, type=int, help='Process concurrency. Default=20')
 @click.option('--es-host', default='localhost', help='Elasticsearch host address')
 @click.option('--es-port', default=9200, type=int, help='Elasticsearch port number')
-@click.option('-v', '--verbose', default=False, type=bool)
+@click.option('-v', '--verbose', is_flag=True)
 def main(ops, start, end, concurrency, es_host, es_port, verbose):
 
     accepted_args = {
@@ -140,10 +147,14 @@ def main(ops, start, end, concurrency, es_host, es_port, verbose):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    if not end:
+    if end:
+        end = convert_date(end)
+    else:
         end = date.today()
 
-    if not start:
+    if start:
+        start = convert_date(start)
+    else:
         delta = timedelta(days=3)
         start = end - delta
 
