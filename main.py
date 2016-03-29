@@ -1,5 +1,6 @@
 import os
 import boto3
+import click
 import logging
 from copy import copy
 from collections import OrderedDict
@@ -7,11 +8,6 @@ from datetime import date, timedelta
 from sentinel_s3 import range_metadata, s3_writer
 
 from elasticsearch import Elasticsearch, RequestError
-
-
-es = Elasticsearch([{'host': 'xxxxxxxxx',
-                     'port': 443}],
-                   use_ssl=True,)
 
 
 def create_index(index_name, doc_type):
@@ -23,7 +19,10 @@ def create_index(index_name, doc_type):
                 'satellite_name': {'type': 'string'},
                 'cloud_coverage': {'type': 'float'},
                 'date': {'type': 'date'},
-                'data_geometry': {'type': 'geo_shape', 'tree': 'quadtree', 'precision': '5mi'}
+                'data_geometry': {
+                    'type': 'geo_shape',
+                    'tree': 'quadtree',
+                    'precision': '5mi'}
             }
         }
     }
@@ -54,10 +53,12 @@ def elasticsearch_updater(product_dir, metadata):
     body['data_geometry'] = body.pop('tile_data_geometry')
 
     try:
-        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'], body=body)
+        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+                 body=body)
     except RequestError:
         body['data_geometry'] = None
-        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'], body=body)
+        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+                 body=body)
 
 
 def last_updated(today):
@@ -99,27 +100,59 @@ def last_updated(today):
     return None
 
 
-def main(start_date, end_date):
-    return range_metadata(start_date, end_date, '.', 20, [elasticsearch_updater])
+@click.command()
+@click.argument('ops', metavar='<operations: choices: s3 | es>', nargs=-1)
+@click.option('--start', default=None, help='Start Date. Format: YYYY-MM-DD')
+@click.option('--end', default=None, help='End Date. Format: YYYY-MM-DD')
+@click.option('--concurrency', default=20, type=int, help='End Date. Format: YYYY-MM-DD')
+@click.option('--es-host', default='localhost', help='Elasticsearch host address')
+@click.option('--es-port', default=9200, type=int, help='Elasticsearch port number')
+@click.option('-v', '--verbose', default=False, type=bool)
+def main(ops, start, end, concurrency, es_host, es_port, verbose):
 
+    accepted_args = {
+        'es': elasticsearch_updater,
+        's3': s3_writer
+    }
 
-if __name__ == '__main__':
+    writers = []
+    for op in ops:
+        if op in accepted_args.keys():
+            writers.append(accepted_args[op])
+        else:
+            raise click.UsageError('Operation (%s) is not supported' % op)
+
     logger = logging.getLogger('sentinel.meta.s3')
     logger.setLevel(logging.DEBUG)
-
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+
+    if verbose:
+        ch.setLevel(logging.INFO)
+    else:
+        ch.setLevel(logging.ERROR)
+
     formatter = logging.Formatter('%(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    today = date.today()
-    # update_date = last_updated(today)
-    # delta = timedelta(days=1)  # reprocess data for a day before the available date
+    if not end:
+        end = date.today()
 
-    create_index('satellites', 'sentinel2')
+    if not start:
+        delta = timedelta(days=3)
+        start = end - delta
 
-    # if update_date:
-        # print(main(update_date - delta, today))
-    print(main(date(2016, 1, 1), today))
+    if 'es' in ops:
+        global es
+        es = Elasticsearch([{
+            'host': es_host,
+            'port': es_port
+        }])
 
+        create_index('satellites', 'sentinel2')
+
+    range_metadata(start, end, '.', concurrency, writers)
+
+
+if __name__ == '__main__':
+    main()
