@@ -9,17 +9,18 @@ This small library helps with generating sentinel-s3 metadata and upload it to A
 #### Usage
 
 ```
-    $ python main.py --help               (env: sentinel-api-data)
-    Usage: main.py [OPTIONS] <operations: choices: s3 | es>
+    $ python main.py --help
 
-    Options:
-      --start TEXT           Start Date. Format: YYYY-MM-DD
-      --end TEXT             End Date. Format: YYYY-MM-DD
-      --concurrency INTEGER  End Date. Format: YYYY-MM-DD
-      --es-host TEXT         Elasticsearch host address
-      --es-port INTEGER      Elasticsearch port number
-      -v, --verbose BOOLEAN
-      --help                 Show this message and exit.
+      Usage: main.py [OPTIONS] <operations: choices: s3 | es>
+
+      Options:
+        --start TEXT           Start Date. Format: YYYY-MM-DD
+        --end TEXT             End Date. Format: YYYY-MM-DD
+        --concurrency INTEGER  Process concurrency. Default=20
+        --es-host TEXT         Elasticsearch host address
+        --es-port INTEGER      Elasticsearch port number
+        -v, --verbose BOOLEAN
+        --help                 Show this message and exit.
 ```
 
 Example:

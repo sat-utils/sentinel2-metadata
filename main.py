@@ -104,7 +104,7 @@ def last_updated(today):
 @click.argument('ops', metavar='<operations: choices: s3 | es>', nargs=-1)
 @click.option('--start', default=None, help='Start Date. Format: YYYY-MM-DD')
 @click.option('--end', default=None, help='End Date. Format: YYYY-MM-DD')
-@click.option('--concurrency', default=20, type=int, help='End Date. Format: YYYY-MM-DD')
+@click.option('--concurrency', default=20, type=int, help='Process concurrency. Default=20')
 @click.option('--es-host', default='localhost', help='Elasticsearch host address')
 @click.option('--es-port', default=9200, type=int, help='Elasticsearch port number')
 @click.option('-v', '--verbose', default=False, type=bool)
