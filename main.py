@@ -38,27 +38,32 @@ def create_index(index_name, doc_type):
 
 def elasticsearch_updater(product_dir, metadata):
 
-    # es.indices.create(index='satellites', ignore=400)
-
-    internal_meta = copy(metadata)
-
-    body = OrderedDict({
-        'scene_id': internal_meta.pop('tile_name'),
-        'satellite_name': metadata.get('spacecraft_name', 'Sentintel-2A'),
-        'cloud_coverage': metadata.get('cloudy_pixel_percentage', 100),
-    })
-
-    body.update(internal_meta)
-
-    body['data_geometry'] = body.pop('tile_data_geometry')
-
     try:
-        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
-                 body=body)
-    except RequestError:
-        body['data_geometry'] = None
-        es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
-                 body=body)
+        internal_meta = copy(metadata)
+
+        body = OrderedDict({
+            'scene_id': internal_meta.pop('tile_name'),
+            'satellite_name': metadata.get('spacecraft_name', 'Sentintel-2A'),
+            'cloud_coverage': metadata.get('cloudy_pixel_percentage', 100),
+        })
+
+        body.update(internal_meta)
+
+        try:
+            body['data_geometry'] = body.pop('tile_data_geometry')
+        except KeyError:
+            pass
+
+        try:
+            es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+                     body=body)
+        except RequestError:
+            body['data_geometry'] = None
+            es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+                     body=body)
+    except Exception as e:
+        print('Unhandled error occured while writing to elasticsearch')
+        print('Details: %s' % e.__str__())
 
 
 def last_updated(today):
