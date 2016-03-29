@@ -1,0 +1,4 @@
+[BASIC]
+disable=import-error, missing-docstring,
+max-line-length=120
+const-rgx=[A-Za-z_][A-Za-z0-9_]*$
