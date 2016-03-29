@@ -19,7 +19,7 @@ This small library helps with generating sentinel-s3 metadata and upload it to A
         --concurrency INTEGER  Process concurrency. Default=20
         --es-host TEXT         Elasticsearch host address
         --es-port INTEGER      Elasticsearch port number
-        -v, --verbose BOOLEAN
+        -v, --verbose
         --help                 Show this message and exit.
 ```
 
