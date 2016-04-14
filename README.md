@@ -29,8 +29,3 @@ This small library helps with generating sentinel-s3 metadata and upload it to A
 Example:
 
     $ python main.py s3 es --start='2016-01-01' --verbose --concurrency=20
-
-
-### To do:
-
-- Add uploader
