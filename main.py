@@ -100,7 +100,7 @@ def s3_writer(product_dir, metadata):
 
     body = meta_constructor(metadata)
 
-    key = os.path.join(product_dir, body['tile_name'] + '.json')
+    key = os.path.join(product_dir, body['scene_id'] + '.json')
     s3.Object(bucket_name, key).put(json.dumps(body))
     object_acl = s3.ObjectAcl(bucket_name, key)
     object_acl.put(ACL='public-read')
