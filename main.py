@@ -207,7 +207,7 @@ def main(ops, product, start, end, concurrency, es_host, es_port, folder, verbos
     logger.addHandler(ch)
 
     if product:
-        single_metadata(product, folder, writers=writers)
+        single_metadata(product, folder, writers=writers, geometry_check=geometry_check)
     else:
 
         if end:
