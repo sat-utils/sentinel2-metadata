@@ -89,6 +89,9 @@ def elasticsearch_updater(product_dir, metadata):
 def file_writer(product_dir, metadata):
     body = meta_constructor(metadata)
 
+    if not os.path.exists(product_dir):
+        os.makedirs(product_dir)
+
     f = open(os.path.join(product_dir, body['scene_id'] + '.json'), 'w')
     f.write(json.dumps(body))
     f.close()
