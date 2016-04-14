@@ -5,7 +5,7 @@ import logging
 from copy import copy
 from collections import OrderedDict
 from datetime import datetime, date, timedelta
-from sentinel_s3 import range_metadata, s3_writer
+from sentinel_s3 import range_metadata, s3_writer, single_metadata
 
 from elasticsearch import Elasticsearch, RequestError
 
@@ -112,8 +112,22 @@ def convert_date(value):
         raise click.UsageError('Incorrect Date format (%s)' % value)
 
 
+def geometry_check(meta):
+    """ Some of tiles located in latitude band of N (MGRS) have an
+    incorrect data gometery in the original metadata files. This function flag these tiles
+    so they are download and correct geometry is extracted for them using sentine-s3 lib """
+
+    try:
+        if meta['latitude_band'] == 'N':
+            return True,
+    except KeyError:
+        pass
+    return False
+
+
 @click.command()
 @click.argument('ops', metavar='<operations: choices: s3 | es>', nargs=-1)
+@click.option('--product', default=None, help='Product name. If given only the given product is processed.')
 @click.option('--start', default=None, help='Start Date. Format: YYYY-MM-DD')
 @click.option('--end', default=None, help='End Date. Format: YYYY-MM-DD')
 @click.option('--concurrency', default=20, type=int, help='Process concurrency. Default=20')
@@ -147,27 +161,31 @@ def main(ops, start, end, concurrency, es_host, es_port, verbose):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    if end:
-        end = convert_date(end)
+    if product:
+        single_metadata(product, '.', writers=writers, geometry_check=geometry_check)
     else:
-        end = date.today()
 
-    if start:
-        start = convert_date(start)
-    else:
-        delta = timedelta(days=3)
-        start = end - delta
+        if end:
+            end = convert_date(end)
+        else:
+            end = date.today()
 
-    if 'es' in ops:
-        global es
-        es = Elasticsearch([{
-            'host': es_host,
-            'port': es_port
-        }])
+        if start:
+            start = convert_date(start)
+        else:
+            delta = timedelta(days=3)
+            start = end - delta
 
-        create_index('satellites', 'sentinel2')
+        if 'es' in ops:
+            global es
+            es = Elasticsearch([{
+                'host': es_host,
+                'port': es_port
+            }])
 
-    range_metadata(start, end, '.', concurrency, writers)
+            create_index('satellites', 'sentinel2')
+
+        range_metadata(start, end, '.', concurrency, writers, geometry_check=geometry_check)
 
 
 if __name__ == '__main__':
