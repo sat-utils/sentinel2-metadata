@@ -13,6 +13,7 @@ from elasticsearch import Elasticsearch, RequestError
 bucket_name = os.getenv('BUCKETNAME', 'sentinel-meta')
 s3 = boto3.resource('s3')
 
+
 def create_index(index_name, doc_type):
 
     body = {
@@ -103,9 +104,7 @@ def s3_writer(product_dir, metadata):
     body = meta_constructor(metadata)
 
     key = os.path.join(product_dir, body['scene_id'] + '.json')
-    s3.Object(bucket_name, key).put(json.dumps(body))
-    object_acl = s3.ObjectAcl(bucket_name, key)
-    object_acl.put(ACL='public-read')
+    s3.Object(bucket_name, key).put(Body=json.dumps(body), ACL='public-read', ContentType='application/json')
 
 
 def last_updated(today):
