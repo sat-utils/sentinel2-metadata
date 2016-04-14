@@ -10,6 +10,8 @@ from sentinel_s3 import range_metadata, single_metadata
 
 from elasticsearch import Elasticsearch, RequestError
 
+bucket_name = os.getenv('BUCKETNAME', 'sentinel-meta')
+s3 = boto3.resource('s3')
 
 def create_index(index_name, doc_type):
 
@@ -109,8 +111,6 @@ def s3_writer(product_dir, metadata):
 def last_updated(today):
     """ Gets the latest time a product added to S3 bucket """
 
-    bucket_name = os.getenv('BUCKETNAME', 'sentinel-metadata')
-    s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket_name)
 
     start_day = today.day
