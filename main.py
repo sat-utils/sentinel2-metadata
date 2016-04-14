@@ -74,11 +74,11 @@ def elasticsearch_updater(product_dir, metadata):
         body = meta_constructor(metadata)
 
         try:
-            es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+            es.index(index="satellites", doc_type="sentinel2", id=body['original_scene_id'],
                      body=body)
         except RequestError:
             body['data_geometry'] = None
-            es.index(index="satellites", doc_type="sentinel2", id=body['scene_id'],
+            es.index(index="satellites", doc_type="sentinel2", id=body['original_scene_id'],
                      body=body)
     except Exception as e:
         print('Unhandled error occured while writing to elasticsearch')
