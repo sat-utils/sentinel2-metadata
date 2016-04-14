@@ -134,7 +134,10 @@ def geometry_check(meta):
 @click.option('--es-host', default='localhost', help='Elasticsearch host address')
 @click.option('--es-port', default=9200, type=int, help='Elasticsearch port number')
 @click.option('-v', '--verbose', is_flag=True)
-def main(ops, start, end, concurrency, es_host, es_port, verbose):
+def main(ops, product, start, end, concurrency, es_host, es_port, verbose):
+
+    if not ops:
+        raise click.UsageError('No Argument provided. Use --help if you need help')
 
     accepted_args = {
         'es': elasticsearch_updater,
