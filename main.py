@@ -13,6 +13,7 @@ from elasticsearch import Elasticsearch, RequestError
 bucket_name = os.getenv('BUCKETNAME', 'sentinel-meta')
 s3 = boto3.resource('s3')
 es_index = 'sat-api'
+es_type = 'sentinel2'
 
 
 def create_index(index_name, doc_type):
@@ -52,12 +53,12 @@ def meta_constructor(metadata):
         int(metadata['path'].split('/')[-1])
     )
 
-    body = OrderedDict({
-        'scene_id': scene_id,
-        'original_scene_id': internal_meta.pop('tile_name'),
-        'satellite_name': metadata.get('spacecraft_name', 'Sentintel-2A'),
-        'cloud_coverage': metadata.get('cloudy_pixel_percentage', 100),
-    })
+    body = OrderedDict([
+        ('scene_id', scene_id),
+        ('original_scene_id', internal_meta.pop('tile_name')),
+        ('satellite_name', metadata.get('spacecraft_name', 'Sentintel-2A')),
+        ('cloud_coverage', metadata.get('cloudy_pixel_percentage', 100)),
+    ])
 
     body.update(internal_meta)
 
@@ -75,11 +76,11 @@ def elasticsearch_updater(product_dir, metadata):
         body = meta_constructor(metadata)
 
         try:
-            es.index(index="sat-api", doc_type="sentinel2", id=body['scene_id'],
+            es.index(index=es_index, doc_type=es_type, id=body['scene_id'],
                      body=body)
         except RequestError:
             body['data_geometry'] = None
-            es.index(index="sat-api", doc_type="sentinel2", id=body['scene_id'],
+            es.index(index=es_index, doc_type=es_type, id=body['scene_id'],
                      body=body)
     except Exception as e:
         print('Unhandled error occured while writing to elasticsearch')
@@ -231,7 +232,7 @@ def main(ops, product, start, end, concurrency, es_host, es_port, folder, verbos
                 'port': es_port
             }])
 
-            create_index(es_index, 'sentinel2')
+            create_index(es_index, es_type)
 
         range_metadata(start, end, folder, concurrency, writers, geometry_check=geometry_check)
 
