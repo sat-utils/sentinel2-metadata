@@ -1,12 +1,12 @@
-### Sentinel Metadata Generator
+## Sentinel Metadata Generator
 
 This small library helps with generating sentinel-s3 metadata and upload it to Amazon S3 and/or ElasticSearch
 
-#### Installation
+### Installation
 
     $ pip install -r requirements.txt
 
-#### Usage
+### Usage
 
 ```
     $ python main.py --help
@@ -29,3 +29,6 @@ This small library helps with generating sentinel-s3 metadata and upload it to A
 Example:
 
     $ python main.py s3 es --start='2016-01-01' --verbose --concurrency=20
+
+### About
+Sentinel2 Metadata Generator was made by [Development Seed](http://developmentseed.org).
